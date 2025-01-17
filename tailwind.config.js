@@ -1,5 +1,3 @@
-const path = require("path")
-
 module.exports = {
   darkMode: "class",
   presets: [require("@medusajs/ui-preset")],
@@ -9,154 +7,131 @@ module.exports = {
     "./src/components/**/*.{js,ts,jsx,tsx}",
     "./src/modules/**/*.{js,ts,jsx,tsx}",
     "./node_modules/@medusajs/ui/dist/**/*.{js,jsx,ts,tsx}",
+    "./node_modules/@nextui-org/theme/dist/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
+    colors: {
+      black: "#050505",
+      "black-10%": "rgba(5, 5, 5, 0.1)",
+      white: "#FDFDFD",
+      grayscale: {
+        800: "#1F1F20",
+        700: "#3A3A3B",
+        600: "#545457",
+        500: "#808080",
+        400: "#A3A3A3",
+        300: "#BBBBBB",
+        200: "#D1D1D1",
+        100: "#E7E7E7",
+        50: "#F4F4F4",
+        30: "#F8F8F9",
+        20: "#FBFBFB",
+      },
+      red: {
+        900: "#c33932",
+        primary: "#DF4718",
+      },
+      yellow: "#FFEFB7",
+      transparent: "rgba(0,0,0,0)",
+      current: "currentColor",
+    },
+    fontSize: {
+      "3xl": ["3.5rem", 1.4],
+      "2xl": ["3rem", 1.4],
+      xl: ["2.5rem", 1.4],
+      lg: ["2rem", 1.4],
+      md: ["1.5rem", 1.4],
+      sm: ["1.125rem", 1.4],
+      base: ["1rem", 1.4],
+      xs: ["0.75rem", 1.4],
+    },
+    borderRadius: {
+      "2xs": "2px",
+      xs: "4px",
+      md: "24px",
+      lg: "30px",
+      full: "100%",
+    },
+    screens: {
+      xs: "400px",
+      sm: "640px",
+      md: "768px",
+      lg: "1024px",
+      xl: "1280px",
+    },
     extend: {
+      spacing: {
+        13.5: "3.375rem",
+        14.5: "3.625rem",
+        15: "3.75rem",
+        17: "4.25rem",
+        18: "4.5rem",
+        19: "4.75rem",
+        21: "5.25rem",
+        22: "5.5rem",
+        23: "5.75rem",
+        25: "6.25rem",
+        26: "6.5rem",
+        27: "6.75rem",
+        28: "7rem",
+        29: "7.25rem",
+        30: "7.5rem",
+        31: "7.75rem",
+        33: "8.25rem",
+        34: "8.5rem",
+        35: "8.75rem",
+        37: "9.25rem",
+        39: "9.75rem",
+        42: "10.5rem",
+        46: "11.5rem",
+        47: "11.75rem",
+        50: "12.5rem",
+        61: "15.25rem",
+        75: "18.75rem",
+        90: "22.5rem",
+        100: "25rem",
+        108: "27rem",
+        120: "30rem",
+        123: "30.75rem",
+        124: "31rem",
+        125: "31.25rem",
+        135: "33.75rem",
+        150: "37.5rem",
+        159: "39.75rem",
+      },
+      borderWidth: {
+        6: "6px",
+      },
       transitionProperty: {
-        width: "width margin",
-        height: "height",
-        bg: "background-color",
-        display: "display opacity",
-        visibility: "visibility",
-        padding: "padding-top padding-right padding-bottom padding-left",
+        fontWeight: "font-weight",
+        padding: "padding",
       },
-      colors: {
-        grey: {
-          0: "#FFFFFF",
-          5: "#F9FAFB",
-          10: "#F3F4F6",
-          20: "#E5E7EB",
-          30: "#D1D5DB",
-          40: "#9CA3AF",
-          50: "#6B7280",
-          60: "#4B5563",
-          70: "#374151",
-          80: "#1F2937",
-          90: "#111827",
-        },
-      },
-      borderRadius: {
-        none: "0px",
-        soft: "2px",
-        base: "4px",
-        rounded: "8px",
-        large: "16px",
-        circle: "9999px",
-      },
-      maxWidth: {
-        "8xl": "100rem",
-      },
-      screens: {
-        "2xsmall": "320px",
-        xsmall: "512px",
-        small: "1024px",
-        medium: "1280px",
-        large: "1440px",
-        xlarge: "1680px",
-        "2xlarge": "1920px",
-      },
-      fontSize: {
-        "3xl": "2rem",
-      },
-      fontFamily: {
-        sans: [
-          "Inter",
-          "-apple-system",
-          "BlinkMacSystemFont",
-          "Segoe UI",
-          "Roboto",
-          "Helvetica Neue",
-          "Ubuntu",
-          "sans-serif",
-        ],
+      zIndex: {
+        header: "9999",
       },
       keyframes: {
-        ring: {
-          "0%": { transform: "rotate(0deg)" },
-          "100%": { transform: "rotate(360deg)" },
-        },
-        "fade-in-right": {
-          "0%": {
-            opacity: "0",
-            transform: "translateX(10px)",
-          },
+        shine: {
           "100%": {
-            opacity: "1",
-            transform: "translateX(0)",
+            transform: "translateX(100%)",
           },
-        },
-        "fade-in-top": {
-          "0%": {
-            opacity: "0",
-            transform: "translateY(-10px)",
-          },
-          "100%": {
-            opacity: "1",
-            transform: "translateY(0)",
-          },
-        },
-        "fade-out-top": {
-          "0%": {
-            height: "100%",
-          },
-          "99%": {
-            height: "0",
-          },
-          "100%": {
-            visibility: "hidden",
-          },
-        },
-        "accordion-slide-up": {
-          "0%": {
-            height: "var(--radix-accordion-content-height)",
-            opacity: "1",
-          },
-          "100%": {
-            height: "0",
-            opacity: "0",
-          },
-        },
-        "accordion-slide-down": {
-          "0%": {
-            "min-height": "0",
-            "max-height": "0",
-            opacity: "0",
-          },
-          "100%": {
-            "min-height": "var(--radix-accordion-content-height)",
-            "max-height": "none",
-            opacity: "1",
-          },
-        },
-        enter: {
-          "0%": { transform: "scale(0.9)", opacity: 0 },
-          "100%": { transform: "scale(1)", opacity: 1 },
-        },
-        leave: {
-          "0%": { transform: "scale(1)", opacity: 1 },
-          "100%": { transform: "scale(0.9)", opacity: 0 },
-        },
-        "slide-in": {
-          "0%": { transform: "translateY(-100%)" },
-          "100%": { transform: "translateY(0)" },
+          infiniteSlider: {
+            '0%': { transform: 'translateX(0)' },
+            '100%': { transform: 'translateX(calc(-250px * 20))' }
+          }
         },
       },
       animation: {
-        ring: "ring 2.2s cubic-bezier(0.5, 0, 0.5, 1) infinite",
-        "fade-in-right":
-          "fade-in-right 0.3s cubic-bezier(0.5, 0, 0.5, 1) forwards",
-        "fade-in-top": "fade-in-top 0.2s cubic-bezier(0.5, 0, 0.5, 1) forwards",
-        "fade-out-top":
-          "fade-out-top 0.2s cubic-bezier(0.5, 0, 0.5, 1) forwards",
-        "accordion-open":
-          "accordion-slide-down 300ms cubic-bezier(0.87, 0, 0.13, 1) forwards",
-        "accordion-close":
-          "accordion-slide-up 300ms cubic-bezier(0.87, 0, 0.13, 1) forwards",
-        enter: "enter 200ms ease-out",
-        "slide-in": "slide-in 1.2s cubic-bezier(.41,.73,.51,1.02)",
-        leave: "leave 150ms ease-in forwards",
+        shine: "shine 1s linear infinite",
+        'infinite-slider': 'infiniteSlider 120s linear infinite',
       },
     },
   },
+  safelist: [
+    {
+      pattern: /col-(start|end)-(1|2|3|4|5|6|7|8|9|10|11|12|13)/,
+      variants: ["xs", "sm", "md", "lg", "xl"],
+    },
+  ],
+  darkMode: "class",
   plugins: [require("tailwindcss-radix")()],
 }
