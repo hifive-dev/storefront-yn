@@ -1,34 +1,21 @@
-import { Table } from "@medusajs/ui"
+// External components
+import { Skeleton } from "@/components/ui/Skeleton"
 
 const SkeletonCartItem = () => {
   return (
-    <Table.Row className="w-full m-4">
-      <Table.Cell className="!pl-0 p-4 w-24">
-        <div className="flex w-24 h-24 p-4 bg-gray-200 rounded-large animate-pulse" />
-      </Table.Cell>
-      <Table.Cell className="text-left">
-        <div className="flex flex-col gap-y-2">
-          <div className="w-32 h-4 bg-gray-200 animate-pulse" />
-          <div className="w-24 h-4 bg-gray-200 animate-pulse" />
+    <div className="flex gap-6 border-b border-grayscale-100 py-8 last:pb-0 last:border-b-0">
+      <Skeleton className="w-25 sm:w-30 h-33 sm:h-40" />
+      <div className="flex-grow flex flex-col justify-between">
+        <div className="flex flex-col gap-2">
+          <Skeleton className="w-30 h-4 sm:h-6" />
+          <Skeleton className="w-25 h-4 sm:h-6" />
         </div>
-      </Table.Cell>
-      <Table.Cell>
-        <div className="flex gap-2 items-center">
-          <div className="w-6 h-8 bg-gray-200 animate-pulse" />
-          <div className="w-14 h-10 bg-gray-200 animate-pulse" />
-        </div>
-      </Table.Cell>
-      <Table.Cell>
-        <div className="flex gap-2">
-          <div className="w-12 h-6 bg-gray-200 animate-pulse" />
-        </div>
-      </Table.Cell>
-      <Table.Cell className="!pr-0 text-right">
-        <div className="flex gap-2 justify-end">
-          <div className="w-12 h-6 bg-gray-200 animate-pulse" />
-        </div>
-      </Table.Cell>
-    </Table.Row>
+        <Skeleton className="w-25 h-8" />
+      </div>
+      <div className="flex flex-col justify-between items-end">
+        <Skeleton className="w-25 h-4 sm:h-6" />
+      </div>
+    </div>
   )
 }
 

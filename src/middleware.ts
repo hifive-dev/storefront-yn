@@ -1,23 +1,18 @@
 import { HttpTypes } from "@medusajs/types"
+import { notFound } from "next/navigation"
 import { NextRequest, NextResponse } from "next/server"
 
 const BACKEND_URL = process.env.MEDUSA_BACKEND_URL
-const PUBLISHABLE_API_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
-const DEFAULT_REGION = process.env.NEXT_PUBLIC_DEFAULT_REGION || "us"
+const PUBLISHABLE_API_KEY = "pk_42737a3d61cc64e8a78d85a43aa98e7a00c3975069e649a3446a73f58c118cfc"
+const DEFAULT_REGION = process.env.NEXT_PUBLIC_DEFAULT_REGION || "eu"
 
 const regionMapCache = {
   regionMap: new Map<string, HttpTypes.StoreRegion>(),
   regionMapUpdated: Date.now(),
 }
 
-async function getRegionMap(cacheId: string) {
+async function getRegionMap() {
   const { regionMap, regionMapUpdated } = regionMapCache
-
-  if (!BACKEND_URL) {
-    throw new Error(
-      "Middleware.ts: Error fetching regions. Did you set up regions in your Medusa Admin and define a MEDUSA_BACKEND_URL environment variable? Note that the variable is no longer named NEXT_PUBLIC_MEDUSA_BACKEND_URL."
-    )
-  }
 
   if (
     !regionMap.keys().next().value ||
@@ -30,23 +25,12 @@ async function getRegionMap(cacheId: string) {
       },
       next: {
         revalidate: 3600,
-        tags: [`regions-${cacheId}`],
+        tags: ["regions"],
       },
-      cache: "force-cache",
-    }).then(async (response) => {
-      const json = await response.json()
-
-      if (!response.ok) {
-        throw new Error(json.message)
-      }
-
-      return json
-    })
+    }).then((res) => res.json())
 
     if (!regions?.length) {
-      throw new Error(
-        "No regions found. Please set up regions in your Medusa Admin."
-      )
+      notFound()
     }
 
     // Create a map of country codes to regions.
@@ -65,7 +49,7 @@ async function getRegionMap(cacheId: string) {
 /**
  * Fetches regions from Medusa and sets the region cookie.
  * @param request
- * @param response
+ * @param regionMap
  */
 async function getCountryCode(
   request: NextRequest,
@@ -94,7 +78,7 @@ async function getCountryCode(
   } catch (error) {
     if (process.env.NODE_ENV === "development") {
       console.error(
-        "Middleware.ts: Error getting the country code. Did you set up regions in your Medusa Admin and define a MEDUSA_BACKEND_URL environment variable? Note that the variable is no longer named NEXT_PUBLIC_MEDUSA_BACKEND_URL."
+        "Middleware.ts: Error getting the country code. Did you set up regions in your Medusa Admin and define a NEXT_PUBLIC_MEDUSA_BACKEND_URL environment variable?"
       )
     }
   }
@@ -104,37 +88,14 @@ async function getCountryCode(
  * Middleware to handle region selection and onboarding status.
  */
 export async function middleware(request: NextRequest) {
-  let redirectUrl = request.nextUrl.href
-
-  let response = NextResponse.redirect(redirectUrl, 307)
-
-  let cacheIdCookie = request.cookies.get("_medusa_cache_id")
-
-  let cacheId = cacheIdCookie?.value || crypto.randomUUID()
-
-  const regionMap = await getRegionMap(cacheId)
-
+  const regionMap = await getRegionMap()
   const countryCode = regionMap && (await getCountryCode(request, regionMap))
 
   const urlHasCountryCode =
     countryCode && request.nextUrl.pathname.split("/")[1].includes(countryCode)
 
-  // if one of the country codes is in the url and the cache id is set, return next
-  if (urlHasCountryCode && cacheIdCookie) {
-    return NextResponse.next()
-  }
-
-  // if one of the country codes is in the url and the cache id is not set, set the cache id and redirect
-  if (urlHasCountryCode && !cacheIdCookie) {
-    response.cookies.set("_medusa_cache_id", cacheId, {
-      maxAge: 60 * 60 * 24,
-    })
-
-    return response
-  }
-
-  // check if the url is a static asset
-  if (request.nextUrl.pathname.includes(".")) {
+  // check if one of the country codes is in the url
+  if (urlHasCountryCode) {
     return NextResponse.next()
   }
 
@@ -142,6 +103,10 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname === "/" ? "" : request.nextUrl.pathname
 
   const queryString = request.nextUrl.search ? request.nextUrl.search : ""
+
+  let redirectUrl = request.nextUrl.href
+
+  let response = NextResponse.redirect(redirectUrl, 307)
 
   // If no country code is set, we redirect to the relevant region.
   if (!urlHasCountryCode && countryCode) {
@@ -154,6 +119,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico|images|assets|png|svg|jpg|jpeg|gif|webp).*)",
+    "/((?!api|_next/static|favicon.ico|_next/image|images|robots.txt).*)",
   ],
 }
