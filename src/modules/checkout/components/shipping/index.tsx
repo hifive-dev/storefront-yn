@@ -1,224 +1,179 @@
 "use client"
 
-import { RadioGroup, Radio } from "@headlessui/react"
-import { setShippingMethod } from "@lib/data/cart"
-import { calculatePriceForShippingOption } from "@lib/data/fulfillment"
-import { convertToLocale } from "@lib/util/money"
-import { CheckCircleSolid, Loader } from "@medusajs/icons"
+import React, { useEffect, useState, useCallback } from "react"
 import { HttpTypes } from "@medusajs/types"
-import { Button, Heading, Text, clx } from "@medusajs/ui"
-import ErrorMessage from "@modules/checkout/components/error-message"
-import Divider from "@modules/common/components/divider"
-import MedusaRadio from "@modules/common/components/radio"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { useEffect, useState } from "react"
 
 type ShippingProps = {
   cart: HttpTypes.StoreCart
   availableShippingMethods: HttpTypes.StoreCartShippingOption[] | null
 }
 
-const Shipping: React.FC<ShippingProps> = ({
-  cart,
-  availableShippingMethods,
-}) => {
-  const [isLoading, setIsLoading] = useState(false)
-  const [isLoadingPrices, setIsLoadingPrices] = useState(true)
-  const [calculatedPricesMap, setCalculatedPricesMap] = useState<
-    Record<string, number>
-  >({})
-  const [error, setError] = useState<string | null>(null)
-  const [shippingMethodId, setShippingMethodId] = useState<string | null>(
-    cart.shipping_methods?.at(-1)?.shipping_option_id || null
-  )
+const Shipping: React.FC<ShippingProps> = ({ cart }) => {
+  const [loading, setLoading] = useState(false)
+  const [shippingOptions, setShippingOptions] = useState<
+    HttpTypes.StoreCartShippingOption[]
+  >([])
+  const [calculatedPrices, setCalculatedPrices] = useState<Record<string, number>>({})
+  const [selectedShippingOption, setSelectedShippingOption] = useState<string | undefined>()
 
-  const searchParams = useSearchParams()
-  const router = useRouter()
-  const pathname = usePathname()
-
-  const isOpen = searchParams.get("step") === "delivery"
-
+  // Fetch available shipping options for the cart
   useEffect(() => {
-    setIsLoadingPrices(true)
+    if (!cart) return
 
-    if (availableShippingMethods?.length) {
-      const promises = availableShippingMethods
-        .filter((sm) => sm.price_type === "calculated")
-        .map((sm) => calculatePriceForShippingOption(sm.id, cart.id))
-
-      if (promises.length) {
-        Promise.allSettled(promises).then((res) => {
-          const pricesMap: Record<string, number> = {}
-          res
-            .filter((r) => r.status === "fulfilled")
-            .forEach((p) => (pricesMap[p.value?.id || ""] = p.value?.amount!))
-
-          setCalculatedPricesMap(pricesMap)
-          setIsLoadingPrices(false)
-        })
+    const fetchShippingOptions = async () => {
+      try {
+        const response = await fetch(
+          `http://localhost:9000/store/shipping-options?cart_id=${cart.id}`,
+          {
+            credentials: "include",
+            headers: {
+              "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || "temp",
+            },
+          }
+        )
+        const data = await response.json()
+        setShippingOptions(data.shipping_options || [])
+      } catch (error) {
+        console.error("Error fetching shipping options:", error)
       }
     }
-  }, [availableShippingMethods])
 
-  const handleEdit = () => {
-    router.push(pathname + "?step=delivery", { scroll: false })
-  }
+    fetchShippingOptions()
+  }, [cart])
 
-  const handleSubmit = () => {
-    router.push(pathname + "?step=payment", { scroll: false })
-  }
-
-  const handleSetShippingMethod = async (id: string) => {
-    setError(null)
-    let currentId: string | null = null
-    setIsLoading(true)
-    setShippingMethodId((prev) => {
-      currentId = prev
-      return id
-    })
-
-    await setShippingMethod({ cartId: cart.id, shippingMethodId: id })
-      .catch((err) => {
-        setShippingMethodId(currentId)
-        setError(err.message)
-      })
-      .finally(() => {
-        setIsLoading(false)
-      })
-  }
-
+  // Calculate prices for dynamic shipping options
   useEffect(() => {
-    setError(null)
-  }, [isOpen])
+    if (!cart || !shippingOptions.length) return
+
+    const calculatePrices = async () => {
+      try {
+        const promises = shippingOptions
+          .filter((option) => option.price_type === "calculated")
+          .map(async (option) => {
+            const response = await fetch(
+              `http://localhost:9000/store/shipping-options/${option.id}/calculate`,
+              {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                  "Content-Type": "application/json",
+                  "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || "temp",
+                },
+                body: JSON.stringify({ cart_id: cart.id }),
+              }
+            )
+            return response.json()
+          })
+
+        const results = await Promise.allSettled(promises)
+        const prices: Record<string, number> = {}
+
+        results.forEach((result) => {
+          if (result.status === "fulfilled" && result.value?.shipping_option) {
+            const { id, amount } = result.value.shipping_option
+            prices[id] = amount
+          }
+        })
+
+        setCalculatedPrices(prices)
+      } catch (error) {
+        console.error("Error calculating shipping prices:", error)
+      }
+    }
+
+    calculatePrices()
+  }, [shippingOptions, cart])
+
+  // Format price to localized currency
+  const formatPrice = useCallback(
+    (amount: number): string =>
+      new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: cart?.currency_code,
+      }).format(amount),
+    [cart?.currency_code]
+  )
+
+  // Get price for a specific shipping option
+  const getShippingOptionPrice = useCallback(
+    (option: HttpTypes.StoreCartShippingOption): string | undefined => {
+      if (option.price_type === "flat") return formatPrice(option.amount)
+      if (calculatedPrices[option.id] !== undefined) return formatPrice(calculatedPrices[option.id])
+      return undefined
+    },
+    [calculatedPrices, formatPrice]
+  )
+
+  // Set selected shipping method for the cart
+  const handleSetShipping = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault()
+    if (!cart || !selectedShippingOption) return
+
+    setLoading(true)
+    try {
+      const response = await fetch(
+        `http://localhost:9000/store/carts/${cart.id}/shipping-methods`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+            "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || "temp",
+          },
+          body: JSON.stringify({ option_id: selectedShippingOption }),
+        }
+      )
+      const data = await response.json()
+      console.log("Updated cart with shipping method:", data)
+    } catch (error) {
+      console.error("Error setting shipping method:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
-    <div className="bg-white">
-      <div className="flex flex-row items-center justify-between mb-6">
-        <Heading
-          level="h2"
-          className={clx(
-            "flex flex-row text-3xl-regular gap-x-2 items-baseline",
-            {
-              "opacity-50 pointer-events-none select-none":
-                !isOpen && cart.shipping_methods?.length === 0,
-            }
-          )}
-        >
-          Delivery
-          {!isOpen && (cart.shipping_methods?.length ?? 0) > 0 && (
-            <CheckCircleSolid />
-          )}
-        </Heading>
-        {!isOpen &&
-          cart?.shipping_address &&
-          cart?.billing_address &&
-          cart?.email && (
-            <Text>
-              <button
-                onClick={handleEdit}
-                className="text-ui-fg-interactive hover:text-ui-fg-interactive-hover"
-                data-testid="edit-delivery-button"
-              >
-                Edit
-              </button>
-            </Text>
-          )}
-      </div>
-      {isOpen ? (
-        <div data-testid="delivery-options-container">
-          <div className="pb-8">
-            <RadioGroup
-              value={shippingMethodId}
-              onChange={handleSetShippingMethod}
-            >
-              {availableShippingMethods?.map((option) => {
-                const isDisabled =
-                  option.price_type === "calculated" &&
-                  !isLoadingPrices &&
-                  typeof calculatedPricesMap[option.id] !== "number"
-
-                return (
-                  <Radio
-                    key={option.id}
-                    value={option.id}
-                    data-testid="delivery-option-radio"
-                    disabled={isDisabled}
-                    className={clx(
-                      "flex items-center justify-between text-small-regular cursor-pointer py-4 border rounded-rounded px-8 mb-2 hover:shadow-borders-interactive-with-active",
-                      {
-                        "border-ui-border-interactive":
-                          option.id === shippingMethodId,
-                        "hover:shadow-brders-none cursor-not-allowed":
-                          isDisabled,
-                      }
-                    )}
-                  >
-                    <div className="flex items-center gap-x-4">
-                      <MedusaRadio checked={option.id === shippingMethodId} />
-                      <span className="text-base-regular">{option.name}</span>
-                    </div>
-                    <span className="justify-self-end text-ui-fg-base">
-                      {option.price_type === "flat" ? (
-                        convertToLocale({
-                          amount: option.amount!,
-                          currency_code: cart?.currency_code,
-                        })
-                      ) : calculatedPricesMap[option.id] ? (
-                        convertToLocale({
-                          amount: calculatedPricesMap[option.id],
-                          currency_code: cart?.currency_code,
-                        })
-                      ) : isLoadingPrices ? (
-                        <Loader />
-                      ) : (
-                        "-"
-                      )}
-                    </span>
-                  </Radio>
-                )
-              })}
-            </RadioGroup>
-          </div>
-
-          <ErrorMessage
-            error={error}
-            data-testid="delivery-option-error-message"
-          />
-
-          <Button
-            size="large"
-            className="mt-6"
-            onClick={handleSubmit}
-            isLoading={isLoading}
-            disabled={!cart.shipping_methods?.[0]}
-            data-testid="submit-delivery-option-button"
+    <div>
+      <h2 className="mb-4 text-lg font-semibold">Shipping Options</h2>
+      {loading && <span>Loading...</span>}
+      {!loading && shippingOptions.length > 0 ? (
+        <form>
+          <label htmlFor="shipping-options" className="block mb-2">
+            Select a shipping method:
+          </label>
+          <select
+            id="shipping-options"
+            className="border rounded w-full mb-4"
+            value={selectedShippingOption}
+            onChange={(e) => setSelectedShippingOption(e.target.value)}
           >
-            Continue to payment
-          </Button>
-        </div>
+            <option key="ZERO" value={0} >
+              Selecteer
+            </option>
+            {shippingOptions.map((option) => {
+              const price = getShippingOptionPrice(option)
+              return (
+                <option key={option.id} value={option.id} disabled={!price}>
+                  {option.name} - {price || "Calculating..."}
+                </option>
+              )
+            })}
+          </select>
+          {selectedShippingOption}
+          <button
+            type="button"
+            className="px-4 py-2 bg-blue-600 text-black rounded disabled:opacity-50"
+            onClick={handleSetShipping}
+            disabled={!selectedShippingOption || loading}
+          >
+            Save
+          </button>
+        </form>
       ) : (
-        <div>
-          <div className="text-small-regular">
-            {cart && (cart.shipping_methods?.length ?? 0) > 0 && (
-              <div className="flex flex-col w-1/3">
-                <Text className="txt-medium-plus text-ui-fg-base mb-1">
-                  Method
-                </Text>
-                <Text className="txt-medium text-ui-fg-subtle">
-                  {cart.shipping_methods?.at(-1)?.name}{" "}
-                  {convertToLocale({
-                    amount: cart.shipping_methods.at(-1)?.amount!,
-                    currency_code: cart?.currency_code,
-                  })}
-                </Text>
-              </div>
-            )}
-          </div>
-        </div>
+        <p>No shipping options available.</p>
       )}
-      <Divider className="mt-8" />
     </div>
   )
 }
 
-export default Shipping
+export default React.memo(Shipping)

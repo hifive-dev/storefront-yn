@@ -5,55 +5,30 @@ import medusaError from "@lib/util/medusa-error"
 import { HttpTypes } from "@medusajs/types"
 import { revalidateTag } from "next/cache"
 import { redirect } from "next/navigation"
-import {
-  getAuthHeaders,
-  getCacheOptions,
-  getCacheTag,
-  getCartId,
-  removeAuthToken,
-  setAuthToken,
-} from "./cookies"
+import { cache } from "react"
+import { getAuthHeaders, removeAuthToken, setAuthToken } from "./cookies"
 
-export const retrieveCustomer =
-  async (): Promise<HttpTypes.StoreCustomer | null> => {
-    const headers = {
-      ...(await getAuthHeaders()),
-    }
+export const getCustomer = cache(async function () {
+  return await sdk.store.customer
+    .retrieve({}, { next: { tags: ["customer"] }, ...(await getAuthHeaders()) })
+    .then(({ customer }) => customer)
+    .catch(() => null)
+})
 
-    const next = {
-      ...(await getCacheOptions("customers")),
-    }
-
-    return await sdk.client
-      .fetch<{ customer: HttpTypes.StoreCustomer }>(`/store/customers/me`, {
-        method: "GET",
-        query: {
-          fields: "*orders",
-        },
-        headers,
-        next,
-        cache: "force-cache",
-      })
-      .then(({ customer }) => customer)
-      .catch(() => null)
-  }
-
-export const updateCustomer = async (body: HttpTypes.StoreUpdateCustomer) => {
-  const headers = {
-    ...(await getAuthHeaders()),
-  }
-
+// TODO: add input validation
+export const updateCustomer = cache(async function (
+  body: HttpTypes.StoreUpdateCustomer
+) {
   const updateRes = await sdk.store.customer
-    .update(body, {}, headers)
+    .update(body, {}, await getAuthHeaders())
     .then(({ customer }) => customer)
     .catch(medusaError)
 
-  const cacheTag = await getCacheTag("customers")
-  revalidateTag(cacheTag)
-
+  revalidateTag("customer")
   return updateRes
-}
+})
 
+// TODO: add input validation
 export async function signup(_currentState: unknown, formData: FormData) {
   const password = formData.get("password") as string
   const customerForm = {
@@ -69,16 +44,12 @@ export async function signup(_currentState: unknown, formData: FormData) {
       password: password,
     })
 
-    await setAuthToken(token as string)
-
-    const headers = {
-      ...(await getAuthHeaders()),
-    }
+    const customHeaders = { authorization: `Bearer ${token}` }
 
     const { customer: createdCustomer } = await sdk.store.customer.create(
       customerForm,
       {},
-      headers
+      customHeaders
     )
 
     const loginToken = await sdk.auth.login("customer", "emailpass", {
@@ -86,37 +57,40 @@ export async function signup(_currentState: unknown, formData: FormData) {
       password,
     })
 
-    await setAuthToken(loginToken as string)
+    if (typeof loginToken === "object") {
+      redirect(loginToken.location)
 
-    const customerCacheTag = await getCacheTag("customers")
-    revalidateTag(customerCacheTag)
+      return
+    }
 
-    await transferCart()
+    await setAuthToken(loginToken)
 
+    revalidateTag("customer")
     return createdCustomer
   } catch (error: any) {
     return error.toString()
   }
 }
 
+// TODO: add input validation
 export async function login(_currentState: unknown, formData: FormData) {
   const email = formData.get("email") as string
   const password = formData.get("password") as string
 
   try {
-    await sdk.auth
-      .login("customer", "emailpass", { email, password })
-      .then(async (token) => {
-        await setAuthToken(token as string)
-        const customerCacheTag = await getCacheTag("customers")
-        revalidateTag(customerCacheTag)
-      })
-  } catch (error: any) {
-    return error.toString()
-  }
+    const token = await sdk.auth.login("customer", "emailpass", {
+      email,
+      password,
+    })
 
-  try {
-    await transferCart()
+    if (typeof token === "object") {
+      redirect(token.location)
+
+      return
+    }
+
+    await setAuthToken(token)
+    revalidateTag("customer")
   } catch (error: any) {
     return error.toString()
   }
@@ -124,32 +98,62 @@ export async function login(_currentState: unknown, formData: FormData) {
 
 export async function signout(countryCode: string) {
   await sdk.auth.logout()
-  removeAuthToken()
+  await removeAuthToken()
   revalidateTag("auth")
   revalidateTag("customer")
   redirect(`/${countryCode}/account`)
 }
 
-export async function transferCart() {
-  const cartId = await getCartId()
-
-  if (!cartId) {
-    return
+// TODO: add input validation
+export const addCustomerAddress = async (
+  _currentState: unknown,
+  formData: FormData
+): Promise<any> => {
+  const address = {
+    first_name: formData.get("first_name") as string,
+    last_name: formData.get("last_name") as string,
+    company: formData.get("company") as string,
+    address_1: formData.get("address_1") as string,
+    address_2: formData.get("address_2") as string,
+    city: formData.get("city") as string,
+    postal_code: formData.get("postal_code") as string,
+    province: formData.get("province") as string,
+    country_code: formData.get("country_code") as string,
+    phone: formData.get("phone") as string,
   }
 
-  const headers = await getAuthHeaders()
-
-  await sdk.store.cart.transferCart(cartId, {}, headers)
-
-  revalidateTag("cart")
+  return sdk.store.customer
+    .createAddress(address, {}, await getAuthHeaders())
+    .then(({ customer }) => {
+      revalidateTag("customer")
+      return { success: true, error: null }
+    })
+    .catch((err) => {
+      return { success: false, error: err.toString() }
+    })
 }
 
-export const addCustomerAddress = async (
+// TODO: add input validation
+export const deleteCustomerAddress = async (
+  addressId: string
+): Promise<void> => {
+  await sdk.store.customer
+    .deleteAddress(addressId, await getAuthHeaders())
+    .then(() => {
+      revalidateTag("customer")
+      return { success: true, error: null }
+    })
+    .catch((err) => {
+      return { success: false, error: err.toString() }
+    })
+}
+
+// TODO: add input validation
+export const updateCustomerAddress = async (
   currentState: Record<string, unknown>,
   formData: FormData
 ): Promise<any> => {
-  const isDefaultBilling = (currentState.isDefaultBilling as boolean) || false
-  const isDefaultShipping = (currentState.isDefaultShipping as boolean) || false
+  const addressId = currentState.addressId as string
 
   const address = {
     first_name: formData.get("first_name") as string,
@@ -162,83 +166,12 @@ export const addCustomerAddress = async (
     province: formData.get("province") as string,
     country_code: formData.get("country_code") as string,
     phone: formData.get("phone") as string,
-    is_default_billing: isDefaultBilling,
-    is_default_shipping: isDefaultShipping,
-  }
-
-  const headers = {
-    ...(await getAuthHeaders()),
   }
 
   return sdk.store.customer
-    .createAddress(address, {}, headers)
-    .then(async ({ customer }) => {
-      const customerCacheTag = await getCacheTag("customers")
-      revalidateTag(customerCacheTag)
-      return { success: true, error: null }
-    })
-    .catch((err) => {
-      return { success: false, error: err.toString() }
-    })
-}
-
-export const deleteCustomerAddress = async (
-  addressId: string
-): Promise<void> => {
-  const headers = {
-    ...(await getAuthHeaders()),
-  }
-
-  await sdk.store.customer
-    .deleteAddress(addressId, headers)
-    .then(async () => {
-      const customerCacheTag = await getCacheTag("customers")
-      revalidateTag(customerCacheTag)
-      return { success: true, error: null }
-    })
-    .catch((err) => {
-      return { success: false, error: err.toString() }
-    })
-}
-
-export const updateCustomerAddress = async (
-  currentState: Record<string, unknown>,
-  formData: FormData
-): Promise<any> => {
-  const addressId =
-    (currentState.addressId as string) || (formData.get("addressId") as string)
-
-  if (!addressId) {
-    return { success: false, error: "Address ID is required" }
-  }
-
-  const address = {
-    first_name: formData.get("first_name") as string,
-    last_name: formData.get("last_name") as string,
-    company: formData.get("company") as string,
-    address_1: formData.get("address_1") as string,
-    address_2: formData.get("address_2") as string,
-    city: formData.get("city") as string,
-    postal_code: formData.get("postal_code") as string,
-    province: formData.get("province") as string,
-    country_code: formData.get("country_code") as string,
-  } as HttpTypes.StoreUpdateCustomerAddress
-
-  const phone = formData.get("phone") as string
-
-  if (phone) {
-    address.phone = phone
-  }
-
-  const headers = {
-    ...(await getAuthHeaders()),
-  }
-
-  return sdk.store.customer
-    .updateAddress(addressId, address, {}, headers)
-    .then(async () => {
-      const customerCacheTag = await getCacheTag("customers")
-      revalidateTag(customerCacheTag)
+    .updateAddress(addressId, address, {}, await getAuthHeaders())
+    .then(() => {
+      revalidateTag("customer")
       return { success: true, error: null }
     })
     .catch((err) => {

@@ -1,45 +1,36 @@
-import { Metadata } from "next"
-
-import { listCartOptions, retrieveCart } from "@lib/data/cart"
-import { retrieveCustomer } from "@lib/data/customer"
-import { getBaseURL } from "@lib/util/env"
-import { StoreCartShippingOption } from "@medusajs/types"
-import CartMismatchBanner from "@modules/layout/components/cart-mismatch-banner"
-import Footer from "@modules/layout/templates/footer"
-import Nav from "@modules/layout/templates/nav"
-import FreeShippingPriceNudge from "@modules/shipping/components/free-shipping-price-nudge"
-
+import { Metadata } from "next";
+import { getBaseURL } from "@lib/util/env";
+import { Footer } from "@/components/Footer";
+import { getRegion, listRegions } from "@lib/data/regions"
+import { SiteHeader } from "@/components/header/site-header"
+import { getCollectionsList } from "@lib/data/collections"
+import { listCategories } from "@lib/data/categories"
+import { InstagramCarousel } from "@/components/instagram-carousel"
 export const metadata: Metadata = {
   metadataBase: new URL(getBaseURL()),
-}
+};
+
 
 export default async function PageLayout(props: { children: React.ReactNode }) {
-  const customer = await retrieveCustomer()
-  const cart = await retrieveCart()
-  let shippingOptions: StoreCartShippingOption[] = []
+  const regions = await listRegions()
+  const categories = await listCategories()
 
-  if (cart) {
-    const { shipping_options } = await listCartOptions()
-
-    shippingOptions = shipping_options
-  }
-
+  const countryOptions = regions
+    .map((r) => {
+      return (r.countries ?? []).map((c) => ({
+        country: c.iso_2,
+        region: r.id,
+        label: c.display_name,
+      }))
+    })
+    .flat()
+    .sort((a, b) => (a?.label ?? "").localeCompare(b?.label ?? ""))
   return (
-    <>
-      <Nav />
-      {customer && cart && (
-        <CartMismatchBanner customer={customer} cart={cart} />
-      )}
-
-      {cart && (
-        <FreeShippingPriceNudge
-          variant="popup"
-          cart={cart}
-          shippingOptions={shippingOptions}
-        />
-      )}
+    <div className="flex flex-col min-h-screen justify-between">
+      <SiteHeader categories={categories} />
       {props.children}
+      <InstagramCarousel />
       <Footer />
-    </>
+    </div>
   )
 }

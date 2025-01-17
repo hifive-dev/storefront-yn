@@ -2,7 +2,64 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
+@layer base {
+  html {
+    @apply text-black;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-medium;
+  }
+}
+
 @layer utilities {
+  .NavigationMenuTrigger[data-state="open"] > svg {
+    transform: rotate(-180deg) scale(0.75);
+  }
+
+  .NavigationMenuTrigger > svg {
+    transform: scale(0.75);
+    transition: transform 200ms ease;
+  }
+  .masonry {
+    column-gap: 1.5em;
+    column-count: 1;
+  }
+
+  .masonry-item {
+    display: inline-block;
+    width: 100%;
+  }
+
+  @media (min-width: 640px) {
+    .masonry-sm {
+      column-count: 2;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .masonry-md {
+      column-count: 3;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .masonry-lg {
+      column-count: 4;
+    }
+  }
+  .animate-infinite-slider {
+    animation: infiniteSlider 120s linear infinite;
+  }
+  .animate-infinite-slider:hover {
+    animation-play-state: paused;
+  }
+
   /* Chrome, Safari and Opera */
   .no-scrollbar::-webkit-scrollbar {
     display: none;
@@ -37,7 +94,7 @@
   select:-webkit-autofill:focus {
     border: 1px solid #212121;
     -webkit-text-fill-color: #212121;
-    -webkit-box-shadow: 0 0 0px 1000px #fff inset;
+    -webkit-box-shadow: 0 0 0 1000px #fff inset;
     transition: background-color 5000s ease-in-out 0s;
   }
 
@@ -47,6 +104,10 @@
   input[type="search"]::-webkit-search-results-decoration {
     -webkit-appearance: none;
   }
+}
+@keyframes infiniteSlider {
+  from { transform: translateX(0); }
+  to { transform: translateX(calc(-250px * 20))}
 }
 
 @layer components {
@@ -108,5 +169,49 @@
 
   .text-3xl-semi {
     @apply text-[32px] leading-[44px] font-semibold;
+  }
+
+  .article {
+    h1 {
+      @apply text-2xl;
+    }
+
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      @apply text-md mt-16 mb-8;
+    }
+
+    p,
+    ul {
+      @apply mb-4;
+    }
+
+    ul,
+    ol {
+      @apply pl-5;
+    }
+
+    ul {
+      @apply list-disc;
+    }
+
+    ol {
+      @apply list-decimal;
+
+      ul {
+        @apply mt-4 pl-0;
+      }
+
+      > li {
+        @apply pl-1;
+      }
+
+      > li + li {
+        @apply mt-5;
+      }
+    }
   }
 }
