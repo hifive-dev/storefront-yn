@@ -14,7 +14,7 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "baseUrl": "./src",
+    "baseUrl": "./ZZsrc",
     "paths": {
       "@lib/*": ["lib/*"],
       "@modules/*": ["modules/*"],
@@ -29,7 +29,9 @@
       }
     ]
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/**/*"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts",
+    "ZZsrc/**/*"
+  ],
   "exclude": [
     "node_modules",
     ".next",

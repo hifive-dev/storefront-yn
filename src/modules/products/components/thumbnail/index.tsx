@@ -1,14 +1,14 @@
-import * as React from "react"
+import { Container, clx } from "@medusajs/ui"
 import Image from "next/image"
-import { clx } from "@medusajs/ui"
-import { HttpTypes } from "@medusajs/types"
+import React from "react"
 
 import PlaceholderImage from "@modules/common/icons/placeholder-image"
 
 type ThumbnailProps = {
-  thumbnail?: HttpTypes.StoreProduct["thumbnail"]
-  images?: HttpTypes.StoreProduct["images"]
-  size?: "small" | "medium" | "large" | "full" | "square" | "3/4"
+  thumbnail?: string | null
+  // TODO: Fix image typings
+  images?: any[] | null
+  size?: "small" | "medium" | "large" | "full" | "square"
   isFeatured?: boolean
   className?: string
   "data-testid"?: string
@@ -25,21 +25,24 @@ const Thumbnail: React.FC<ThumbnailProps> = ({
   const initialImage = thumbnail || images?.[0]?.url
 
   return (
-    <div
-      className={clx("relative w-full overflow-hidden", className, {
-        "aspect-[11/14]": isFeatured,
-        "aspect-[9/16]": !isFeatured && size !== "square" && size !== "3/4",
-        "aspect-[1/1]": size === "square",
-        "aspect-[3/4]": size === "3/4",
-        "w-[180px]": size === "small",
-        "w-[290px]": size === "medium",
-        "w-[440px]": size === "large",
-        "w-full": size === "full",
-      })}
+    <Container
+      className={clx(
+        "relative w-full overflow-hidden p-4 bg-ui-bg-subtle shadow-elevation-card-rest rounded-large group-hover:shadow-elevation-card-hover transition-shadow ease-in-out duration-150",
+        className,
+        {
+          "aspect-[11/14]": isFeatured,
+          "aspect-[9/16]": !isFeatured && size !== "square",
+          "aspect-[1/1]": size === "square",
+          "w-[180px]": size === "small",
+          "w-[290px]": size === "medium",
+          "w-[440px]": size === "large",
+          "w-full": size === "full",
+        }
+      )}
       data-testid={dataTestid}
     >
       <ImageOrPlaceholder image={initialImage} size={size} />
-    </div>
+    </Container>
   )
 }
 

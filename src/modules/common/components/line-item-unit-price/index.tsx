@@ -1,31 +1,61 @@
 import { getPricesForVariant } from "@lib/util/get-product-price"
+import { convertToLocale } from "@lib/util/money"
 import { HttpTypes } from "@medusajs/types"
+import { clx } from "@medusajs/ui"
 
 type LineItemUnitPriceProps = {
   item: HttpTypes.StoreCartLineItem | HttpTypes.StoreOrderLineItem
+  style?: "default" | "tight"
+  currencyCode: string
 }
 
-const LineItemUnitPrice = ({ item }: LineItemUnitPriceProps) => {
-  const {
-    original_price,
-    calculated_price,
-    original_price_number,
-    calculated_price_number,
-  } = getPricesForVariant(item.variant) ?? {}
-  const hasReducedPrice = calculated_price_number < original_price_number
+const LineItemUnitPrice = ({
+  item,
+  style = "default",
+  currencyCode,
+}: LineItemUnitPriceProps) => {
+  const { total, original_total, unit_price } = item
+
+  const hasReducedPrice = total < original_total
+
+  const percentage_diff = Math.round(
+    ((original_total - total) / original_total) * 100
+  )
 
   return (
-    <div>
-      {hasReducedPrice ? (
+    <div className="flex flex-col text-ui-fg-muted justify-center h-full">
+      {hasReducedPrice && (
         <>
-          <p className="text-base sm:text-sm font-semibold text-red-primary">
-            {calculated_price}
+          <p>
+            {style === "default" && (
+              <span className="text-ui-fg-muted">Original: </span>
+            )}
+            <span
+              className="line-through"
+              data-testid="product-unit-original-price"
+            >
+              {convertToLocale({
+                amount: original_total / item.quantity,
+                currency_code: currencyCode,
+              })}
+            </span>
           </p>
-          <p className="text-grayscale-500 line-through">{original_price}</p>
+          {style === "default" && (
+            <span className="text-ui-fg-interactive">-{percentage_diff}%</span>
+          )}
         </>
-      ) : (
-        <p className="text-base sm:text-sm font-semibold">{calculated_price}</p>
       )}
+      <span
+        className={clx("text-base-regular", {
+          "text-ui-fg-interactive": hasReducedPrice,
+        })}
+        data-testid="product-unit-price"
+      >
+        {convertToLocale({
+          amount: unit_price,
+          currency_code: currencyCode,
+        })}
+      </span>
     </div>
   )
 }

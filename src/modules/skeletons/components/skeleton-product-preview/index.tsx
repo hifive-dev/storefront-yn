@@ -1,16 +1,12 @@
-// Components
-import { Skeleton } from "@/components/ui/Skeleton"
+import { Container } from "@medusajs/ui"
 
 const SkeletonProductPreview = () => {
   return (
-    <div>
-      <Skeleton className="mb-4 md:mb-6 w-full aspect-square" />
-      <div className="flex justify-between max-md:flex-col">
-        <div>
-          <Skeleton className="mb-2.5 h-3 md:h-5 w-22" />
-          <Skeleton className="max-md:hidden h-3 md:h-3 w-18" />
-        </div>
-        <Skeleton className="h-3 md:h-6 w-18 md:w-22" />
+    <div className="animate-pulse">
+      <Container className="aspect-[9/16] w-full bg-gray-100 bg-ui-bg-subtle" />
+      <div className="flex justify-between text-base-regular mt-2">
+        <div className="w-2/5 h-6 bg-gray-100"></div>
+        <div className="w-1/5 h-6 bg-gray-100"></div>
       </div>
     </div>
   )

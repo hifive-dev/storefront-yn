@@ -1,12 +1,10 @@
 import ItemsTemplate from "./items"
 import Summary from "./summary"
 import EmptyCartMessage from "../components/empty-cart-message"
+import SignInPrompt from "../components/sign-in-prompt"
+import Divider from "@modules/common/components/divider"
 import { HttpTypes } from "@medusajs/types"
 
-// Components
-import { Layout, LayoutColumn } from "@/components/Layout"
-
-// TODO: Ask customer if they want to sign in or continue as guest
 const CartTemplate = ({
   cart,
   customer,
@@ -15,26 +13,38 @@ const CartTemplate = ({
   customer: HttpTypes.StoreCustomer | null
 }) => {
   return (
-    <Layout className="pt-39 pb-36">
-      {cart?.items?.length ? (
-        <>
-          <LayoutColumn
-            start={1}
-            end={{ base: 13, lg: 9, xl: 10 }}
-            className="mb-14 lg:mb-0"
-          >
-            <ItemsTemplate items={cart?.items} />
-          </LayoutColumn>
-          <LayoutColumn start={{ base: 1, lg: 9, xl: 10 }} end={13}>
-            {cart && cart.region && <Summary cart={cart as any} />}
-          </LayoutColumn>
-        </>
-      ) : (
-        <LayoutColumn start={1} end={{ base: 13 }} className="mb-14 lg:mb-0">
-          <EmptyCartMessage />
-        </LayoutColumn>
-      )}
-    </Layout>
+    <div className="py-12">
+      <div className="content-container" data-testid="cart-container">
+        {cart?.items?.length ? (
+          <div className="grid grid-cols-1 small:grid-cols-[1fr_360px] gap-x-40">
+            <div className="flex flex-col bg-white py-6 gap-y-6">
+              {!customer && (
+                <>
+                  <SignInPrompt />
+                  <Divider />
+                </>
+              )}
+              <ItemsTemplate cart={cart} />
+            </div>
+            <div className="relative">
+              <div className="flex flex-col gap-y-8 sticky top-12">
+                {cart && cart.region && (
+                  <>
+                    <div className="bg-white py-6">
+                      <Summary cart={cart as any} />
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div>
+            <EmptyCartMessage />
+          </div>
+        )}
+      </div>
+    </div>
   )
 }
 

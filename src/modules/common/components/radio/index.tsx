@@ -1,4 +1,4 @@
-const Index = ({ checked, 'data-testid': dataTestId }: { checked: boolean, 'data-testid'?: string }) => {
+const Radio = ({ checked, 'data-testid': dataTestId }: { checked: boolean, 'data-testid'?: string }) => {
   return (
     <>
       <button
@@ -24,4 +24,4 @@ const Index = ({ checked, 'data-testid': dataTestId }: { checked: boolean, 'data
   )
 }
 
-export default Index
+export default Radio

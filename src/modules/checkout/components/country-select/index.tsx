@@ -1,22 +1,23 @@
-import { useMemo } from "react"
+import { forwardRef, useImperativeHandle, useMemo, useRef } from "react"
 
+import NativeSelect, {
+  NativeSelectProps,
+} from "@modules/common/components/native-select"
 import { HttpTypes } from "@medusajs/types"
-import { Popover, Select, SelectProps } from "react-aria-components"
-import {
-  UiSelectButton,
-  UiSelectIcon,
-  UiSelectListBox,
-  UiSelectListBoxItem,
-  UiSelectValue,
-} from "@/components/ui/Select"
 
-const CountrySelect: React.FC<
-  SelectProps<
-    Exclude<HttpTypes.StoreRegion["countries"], undefined>[number]
-  > & {
+const CountrySelect = forwardRef<
+  HTMLSelectElement,
+  NativeSelectProps & {
     region?: HttpTypes.StoreRegion
   }
-> = ({ placeholder = "Country", region, ...props }) => {
+>(({ placeholder = "Country", region, defaultValue, ...props }, ref) => {
+  const innerRef = useRef<HTMLSelectElement>(null)
+
+  useImperativeHandle<HTMLSelectElement | null, HTMLSelectElement | null>(
+    ref,
+    () => innerRef.current
+  )
+
   const countryOptions = useMemo(() => {
     if (!region) {
       return []
@@ -29,23 +30,20 @@ const CountrySelect: React.FC<
   }, [region])
 
   return (
-    <Select aria-label="Select country" {...props} placeholder={placeholder}>
-      <UiSelectButton className="!h-14">
-        <UiSelectValue />
-        <UiSelectIcon />
-      </UiSelectButton>
-      <Popover className="w-[--trigger-width]">
-        <UiSelectListBox>
-          {countryOptions?.map(({ value, label }, index) => (
-            <UiSelectListBoxItem key={index} id={value}>
-              {label}
-            </UiSelectListBoxItem>
-          ))}
-        </UiSelectListBox>
-      </Popover>
-    </Select>
+    <NativeSelect
+      ref={innerRef}
+      placeholder={placeholder}
+      defaultValue={defaultValue}
+      {...props}
+    >
+      {countryOptions?.map(({ value, label }, index) => (
+        <option key={index} value={value}>
+          {label}
+        </option>
+      ))}
+    </NativeSelect>
   )
-}
+})
 
 CountrySelect.displayName = "CountrySelect"
 

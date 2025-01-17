@@ -1,48 +1,44 @@
-import { getProductsListWithSort } from "@lib/data/products"
+import { listProductsWithSort } from "@lib/data/products"
 import { getRegion } from "@lib/data/regions"
-import { HttpTypes } from "@medusajs/types"
 import ProductPreview from "@modules/products/components/product-preview"
 import { Pagination } from "@modules/store/components/pagination"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
-import { Layout, LayoutColumn } from "@/components/Layout"
 
 const PRODUCT_LIMIT = 12
 
+type PaginatedProductsParams = {
+  limit: number
+  collection_id?: string[]
+  category_id?: string[]
+  id?: string[]
+  order?: string
+}
+
 export default async function PaginatedProducts({
-                                                  sortBy,
-                                                  page,
-                                                  collectionId,
-                                                  categoryId,
-                                                  typeId,
-                                                  productsIds,
-                                                  countryCode,
+  sortBy,
+  page,
+  collectionId,
+  categoryId,
+  productsIds,
+  countryCode,
 }: {
   sortBy?: SortOptions
   page: number
-  collectionId?: string | string[]
-  categoryId?: string | string[]
-  typeId?: string | string[]
+  collectionId?: string
+  categoryId?: string
   productsIds?: string[]
   countryCode: string
 }) {
-  const queryParams: HttpTypes.StoreProductParams = {
-    limit: PRODUCT_LIMIT,
+  const queryParams: PaginatedProductsParams = {
+    limit: 12,
   }
 
   if (collectionId) {
-    queryParams["collection_id"] = Array.isArray(collectionId)
-      ? collectionId
-      : [collectionId]
+    queryParams["collection_id"] = [collectionId]
   }
 
   if (categoryId) {
-    queryParams["category_id"] = Array.isArray(categoryId)
-      ? categoryId
-      : [categoryId]
-  }
-
-  if (typeId) {
-    queryParams["type_id"] = Array.isArray(typeId) ? typeId : [typeId]
+    queryParams["category_id"] = [categoryId]
   }
 
   if (productsIds) {
@@ -52,18 +48,8 @@ export default async function PaginatedProducts({
   if (sortBy === "created_at") {
     queryParams["order"] = "created_at"
   }
-  let region
-  try {
-    region = await getRegion(countryCode)
-  } catch (error) {
-    console.error(`Error fetching region for country code ${countryCode}:`, error)
-    return <div>Error: Unable to fetch region information. Please try again later.</div>
-  }
 
-  if (!region) {
-    console.error(`No region found for country code: ${countryCode}`)
-    return <div>Error: Region not found. Please check the country code and try again.</div>
-  }
+  const region = await getRegion(countryCode)
 
   if (!region) {
     return null
@@ -71,7 +57,7 @@ export default async function PaginatedProducts({
 
   let {
     response: { products, count },
-  } = await getProductsListWithSort({
+  } = await listProductsWithSort({
     page,
     queryParams,
     sortBy,
@@ -82,15 +68,18 @@ export default async function PaginatedProducts({
 
   return (
     <>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 px-6 md:px-10 lg:px-20">
+      <ul
+        className="grid grid-cols-2 w-full small:grid-cols-3 medium:grid-cols-4 gap-x-6 gap-y-8"
+        data-testid="products-list"
+      >
         {products.map((p) => {
           return (
-            <div key={p.id} className="">
+            <li key={p.id}>
               <ProductPreview product={p} region={region} />
-            </div>
+            </li>
           )
         })}
-      </div>
+      </ul>
       {totalPages > 1 && (
         <Pagination
           data-testid="product-pagination"

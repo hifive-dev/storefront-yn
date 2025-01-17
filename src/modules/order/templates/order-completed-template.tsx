@@ -1,69 +1,52 @@
-import { HttpTypes } from "@medusajs/types"
+import { Heading } from "@medusajs/ui"
+import { cookies as nextCookies } from "next/headers"
 
+import CartTotals from "@modules/common/components/cart-totals"
+import Help from "@modules/order/components/help"
+import Items from "@modules/order/components/items"
+import OnboardingCta from "@modules/order/components/onboarding-cta"
+import OrderDetails from "@modules/order/components/order-details"
+import ShippingDetails from "@modules/order/components/shipping-details"
 import PaymentDetails from "@modules/order/components/payment-details"
-import { Layout, LayoutColumn } from "@/components/Layout"
-import { LocalizedButtonLink } from "@/components/LocalizedLink"
+import { HttpTypes } from "@medusajs/types"
 
 type OrderCompletedTemplateProps = {
   order: HttpTypes.StoreOrder
 }
 
-export default function OrderCompletedTemplate({
+export default async function OrderCompletedTemplate({
   order,
 }: OrderCompletedTemplateProps) {
-  return (
-    <Layout className="pt-39 pb-36">
-      <LayoutColumn
-        start={{ base: 1, lg: 3, xl: 4 }}
-        end={{ base: 13, lg: 11, xl: 10 }}
-      >
-        <h1 className="text-xl md:text-2xl mb-6">Thank you for your order!</h1>
-        <p className="mb-4">
-          We are pleased to confirm that your order has been successfully placed
-          and will be processed shortly.
-        </p>
-        <p>
-          We have sent you the receipt and order details via{" "}
-          <strong>e-mail</strong>.<br />
-          Your order number is <strong>#{order.display_id}</strong>.
-        </p>
-        <div className="flex flex-col sm:flex-row mt-16 gap-8">
-          <div className="flex-grow">
-            <h2 className="font-normal">Shipping adress:</h2>
-            <p className="text-grayscale-500">
-              {[
-                order.shipping_address?.first_name,
-                order.shipping_address?.last_name,
-              ]
-                .filter(Boolean)
-                .join(" ")}
-              <br />
-              {[
-                order.shipping_address?.address_1,
-                [
-                  order.shipping_address?.postal_code,
-                  order.shipping_address?.city,
-                ]
-                  .filter(Boolean)
-                  .join(" "),
-                order.shipping_address?.country?.display_name,
-              ]
-                .filter(Boolean)
-                .join(", ")}
-              <br />
-              {order.shipping_address?.phone}
-            </p>
-          </div>
-          <div>
-            <h2 className="font-normal">Payment:</h2>
-            <PaymentDetails order={order} />
-          </div>
-        </div>
+  const cookies = await nextCookies()
 
-        <LocalizedButtonLink href="/" isFullWidth className="mt-16">
-          Go back to home page
-        </LocalizedButtonLink>
-      </LayoutColumn>
-    </Layout>
+  const isOnboarding = cookies.get("_medusa_onboarding")?.value === "true"
+
+  return (
+    <div className="py-6 min-h-[calc(100vh-64px)]">
+      <div className="content-container flex flex-col justify-center items-center gap-y-10 max-w-4xl h-full w-full">
+        {isOnboarding && <OnboardingCta orderId={order.id} />}
+        <div
+          className="flex flex-col gap-4 max-w-4xl h-full bg-white w-full py-10"
+          data-testid="order-complete-container"
+        >
+          <Heading
+            level="h1"
+            className="flex flex-col gap-y-3 text-ui-fg-base text-3xl mb-4"
+          >
+            <span>Thank you!</span>
+            <span>Your order was placed successfully.</span>
+          </Heading>
+          <OrderDetails order={order} />
+          <Heading level="h2" className="flex flex-row text-3xl-regular">
+            Summary
+          </Heading>
+          <Items order={order} />
+          <CartTotals totals={order} />
+          <ShippingDetails order={order} />
+          <PaymentDetails order={order} />
+          <Help />
+        </div>
+      </div>
+    </div>
   )
 }

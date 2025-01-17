@@ -1,11 +1,7 @@
 import { Metadata } from "next"
 import { notFound } from "next/navigation"
-
-import { sdk } from "@lib/config"
+import { listProducts } from "@lib/data/products"
 import { getRegion, listRegions } from "@lib/data/regions"
-import {
-  getProductByHandle,
-} from "@lib/data/products"
 import ProductTemplate from "@modules/products/templates"
 
 type Props = {
@@ -14,34 +10,28 @@ type Props = {
 
 export async function generateStaticParams() {
   try {
-    const countryCodes = await listRegions().then(
-      (regions) =>
-        regions
-          ?.map((r) => r.countries?.map((c) => c.iso_2))
-          .flat()
-          .filter(Boolean) as string[]
+    const countryCodes = await listRegions().then((regions) =>
+      regions?.map((r) => r.countries?.map((c) => c.iso_2)).flat()
     )
 
     if (!countryCodes) {
       return []
     }
 
-    const { products } = await sdk.store.product.list(
-      { fields: "handle" },
-      { next: { tags: ["products"] } }
-    )
+    const products = await listProducts({
+      countryCode: "US",
+      queryParams: { fields: "handle" },
+    }).then(({ response }) => response.products)
 
-    const staticParams = countryCodes
-      ?.map((countryCode) =>
+    return countryCodes
+      .map((countryCode) =>
         products.map((product) => ({
           countryCode,
           handle: product.handle,
         }))
       )
       .flat()
-      .filter((product) => product.handle)
-
-    return staticParams
+      .filter((param) => param.handle)
   } catch (error) {
     console.error(
       `Failed to generate static paths for product pages: ${
@@ -52,15 +42,19 @@ export async function generateStaticParams() {
   }
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { handle, countryCode } = await params
-  const region = await getRegion(countryCode)
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  const params = await props.params
+  const { handle } = params
+  const region = await getRegion(params.countryCode)
 
   if (!region) {
     notFound()
   }
 
-  const product = await getProductByHandle(handle, region.id)
+  const product = await listProducts({
+    countryCode: params.countryCode,
+    queryParams: { handle },
+  }).then(({ response }) => response.products[0])
 
   if (!product) {
     notFound()
@@ -77,28 +71,28 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default async function ProductPage({ params }: Props) {
-  const { handle, countryCode } = await params
-  const region = await getRegion(countryCode)
-  console.log(params)
-  console.log(region)
+export default async function ProductPage(props: Props) {
+  const params = await props.params
+  const region = await getRegion(params.countryCode)
+
   if (!region) {
     notFound()
   }
-  //
-  const [pricedProduct] = await Promise.all([
-    getProductByHandle(handle, region.id),
-  ])
+
+  const pricedProduct = await listProducts({
+    countryCode: params.countryCode,
+    queryParams: { handle: params.handle },
+  }).then(({ response }) => response.products[0])
 
   if (!pricedProduct) {
     notFound()
   }
 
-
   return (
-      <ProductTemplate
-        product={pricedProduct}
-        region={region}
-        countryCode={countryCode}
-    />)
+    <ProductTemplate
+      product={pricedProduct}
+      region={region}
+      countryCode={params.countryCode}
+    />
+  )
 }

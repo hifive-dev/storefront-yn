@@ -1,33 +1,25 @@
-import React, { useState, useEffect } from "react"
-import CountrySelect from "../country-select"
 import { HttpTypes } from "@medusajs/types"
-import { Input } from "@/components/Forms"
+import Input from "@modules/common/components/input"
+import React, { useState } from "react"
+import CountrySelect from "../country-select"
 
 const BillingAddress = ({ cart }: { cart: HttpTypes.StoreCart | null }) => {
-  const [formData, setFormData] = useState<any>({})
-
-  useEffect(() => {
-    setFormData({
-      "billing_address.first_name": cart?.billing_address?.first_name || "",
-      "billing_address.last_name": cart?.billing_address?.last_name || "",
-      "billing_address.address_1": cart?.billing_address?.address_1 || "",
-      "billing_address.company": cart?.billing_address?.company || "",
-      "billing_address.postal_code": cart?.billing_address?.postal_code || "",
-      "billing_address.city": cart?.billing_address?.city || "",
-      "billing_address.country_code": cart?.billing_address?.country_code || "",
-      "billing_address.province": cart?.billing_address?.province || "",
-      "billing_address.phone": cart?.billing_address?.phone || "",
-    })
-  }, [cart?.billing_address])
+  const [formData, setFormData] = useState<any>({
+    "billing_address.first_name": cart?.billing_address?.first_name || "",
+    "billing_address.last_name": cart?.billing_address?.last_name || "",
+    "billing_address.address_1": cart?.billing_address?.address_1 || "",
+    "billing_address.company": cart?.billing_address?.company || "",
+    "billing_address.postal_code": cart?.billing_address?.postal_code || "",
+    "billing_address.city": cart?.billing_address?.city || "",
+    "billing_address.country_code": cart?.billing_address?.country_code || "",
+    "billing_address.province": cart?.billing_address?.province || "",
+    "billing_address.phone": cart?.billing_address?.phone || "",
+  })
 
   const handleChange = (
-    e:
-      | React.ChangeEvent<
-          HTMLInputElement | HTMLInputElement | HTMLSelectElement
-        >
-      | {
-          target: { name: string; value: string }
-        }
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLInputElement | HTMLSelectElement
+    >
   ) => {
     setFormData({
       ...formData,
@@ -39,98 +31,79 @@ const BillingAddress = ({ cart }: { cart: HttpTypes.StoreCart | null }) => {
     <>
       <div className="grid grid-cols-2 gap-4">
         <Input
-          placeholder="First name"
+          label="First name"
           name="billing_address.first_name"
           autoComplete="given-name"
-          value={formData["billing_address.first_name"] || ""}
+          value={formData["billing_address.first_name"]}
           onChange={handleChange}
           required
           data-testid="billing-first-name-input"
-          variant="outline"
         />
         <Input
-          placeholder="Last name"
+          label="Last name"
           name="billing_address.last_name"
           autoComplete="family-name"
-          value={formData["billing_address.last_name"] || ""}
+          value={formData["billing_address.last_name"]}
           onChange={handleChange}
           required
           data-testid="billing-last-name-input"
-          variant="outline"
         />
         <Input
-          placeholder="Address"
+          label="Address"
           name="billing_address.address_1"
           autoComplete="address-line1"
-          value={formData["billing_address.address_1"] || ""}
+          value={formData["billing_address.address_1"]}
           onChange={handleChange}
           required
           data-testid="billing-address-input"
-          variant="outline"
         />
         <Input
-          placeholder="Company"
+          label="Company"
           name="billing_address.company"
-          value={formData["billing_address.company"] || ""}
+          value={formData["billing_address.company"]}
           onChange={handleChange}
           autoComplete="organization"
           data-testid="billing-company-input"
-          variant="outline"
         />
         <Input
-          placeholder="Postal code"
+          label="Postal code"
           name="billing_address.postal_code"
           autoComplete="postal-code"
-          value={formData["billing_address.postal_code"] || ""}
+          value={formData["billing_address.postal_code"]}
           onChange={handleChange}
           required
           data-testid="billing-postal-input"
-          variant="outline"
         />
         <Input
-          placeholder="City"
+          label="City"
           name="billing_address.city"
           autoComplete="address-level2"
-          value={formData["billing_address.city"] || ""}
-          onChange={handleChange}
-          required
-          data-testid="billing-city-input"
-          variant="outline"
+          value={formData["billing_address.city"]}
         />
         <CountrySelect
           name="billing_address.country_code"
           autoComplete="country"
           region={cart?.region}
-          selectedKey={formData["billing_address.country_code"] || null}
-          onSelectionChange={(value) =>
-            handleChange({
-              target: {
-                name: "billing_address.country_code",
-                value: `${value}`,
-              },
-            })
-          }
-          isRequired
+          value={formData["billing_address.country_code"]}
+          onChange={handleChange}
+          required
           data-testid="billing-country-select"
         />
         <Input
-          placeholder="State / Province"
+          label="State / Province"
           name="billing_address.province"
           autoComplete="address-level1"
-          value={formData["billing_address.province"] || ""}
+          value={formData["billing_address.province"]}
           onChange={handleChange}
-          required
           data-testid="billing-province-input"
-          variant="outline"
         />
         <Input
-          placeholder="Phone"
+          label="Phone"
           name="billing_address.phone"
           autoComplete="tel"
-          value={formData["billing_address.phone"] || ""}
+          value={formData["billing_address.phone"]}
           onChange={handleChange}
           data-testid="billing-phone-input"
-          variant="outline"
         />
       </div>
     </>

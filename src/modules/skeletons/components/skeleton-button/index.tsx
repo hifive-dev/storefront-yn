@@ -1,11 +1,5 @@
-// External components
-import { twMerge } from "tailwind-merge"
-
-// Components
-import { Skeleton } from "@/components/ui/Skeleton"
-
-const SkeletonButton: React.FC<{ className?: string }> = ({ className }) => {
-  return <Skeleton className={twMerge("w-30 h-12", className)} />
+const SkeletonButton = () => {
+  return <div className="w-full min-h-[50px] px-5 py-[10px] bg-gray-100"></div>
 }
 
 export default SkeletonButton

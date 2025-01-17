@@ -1,55 +1,47 @@
 "use client"
 
-// External packages
-import { Popover, Select } from "react-aria-components"
-
-// Components
-import {
-  UiSelectButton,
-  UiSelectIcon,
-  UiSelectListBox,
-  UiSelectListBoxItem,
-  UiSelectValue,
-} from "@/components/ui/Select"
+import FilterRadioGroup from "@modules/common/components/filter-radio-group"
 
 export type SortOptions = "price_asc" | "price_desc" | "created_at"
 
 type SortProductsProps = {
-  sortBy: SortOptions | undefined
+  sortBy: SortOptions
   setQueryParams: (name: string, value: SortOptions) => void
+  "data-testid"?: string
 }
 
-const SortProducts = ({ sortBy, setQueryParams }: SortProductsProps) => {
+const sortOptions = [
+  {
+    value: "created_at",
+    label: "Latest Arrivals",
+  },
+  {
+    value: "price_asc",
+    label: "Price: Low -> High",
+  },
+  {
+    value: "price_desc",
+    label: "Price: High -> Low",
+  },
+]
+
+const SortProducts = ({
+  "data-testid": dataTestId,
+  sortBy,
+  setQueryParams,
+}: SortProductsProps) => {
   const handleChange = (value: SortOptions) => {
     setQueryParams("sortBy", value)
   }
 
   return (
-    <Select
-      placeholder="Sort by"
-      selectedKey={sortBy || "sortBy"}
-      onSelectionChange={(key) => {
-        handleChange(key as SortOptions)
-      }}
-      className="max-md:hidden"
-      aria-label="Sort by"
-    >
-      <UiSelectButton>
-        <UiSelectValue />
-        <UiSelectIcon />
-      </UiSelectButton>
-      <Popover className="w-60" crossOffset={-126}>
-        <UiSelectListBox>
-          <UiSelectListBoxItem id="created_at">
-            Latest Arrivals
-          </UiSelectListBoxItem>
-          <UiSelectListBoxItem id="price_asc">Lowest price</UiSelectListBoxItem>
-          <UiSelectListBoxItem id="price_desc">
-            Highest price
-          </UiSelectListBoxItem>
-        </UiSelectListBox>
-      </Popover>
-    </Select>
+    <FilterRadioGroup
+      title="Sort by"
+      items={sortOptions}
+      value={sortBy}
+      handleChange={handleChange}
+      data-testid={dataTestId}
+    />
   )
 }
 

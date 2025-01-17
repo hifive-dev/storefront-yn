@@ -1,15 +1,17 @@
 import "server-only"
 import { cookies as nextCookies } from "next/headers"
+
 export const getAuthHeaders = async (): Promise<
   { authorization: string } | {}
 > => {
-  const token = (await nextCookies()).get("_medusa_jwt")?.value
+  const cookies = await nextCookies()
+  const token = cookies.get("_medusa_jwt")?.value
 
-  if (token) {
-    return { authorization: `Bearer ${token}` }
+  if (!token) {
+    return {}
   }
 
-  return {}
+  return { authorization: `Bearer ${token}` }
 }
 
 export const getCacheTag = async (tag: string): Promise<string> => {
@@ -26,6 +28,7 @@ export const getCacheTag = async (tag: string): Promise<string> => {
     return ""
   }
 }
+
 export const getCacheOptions = async (
   tag: string
 ): Promise<{ tags: string[] } | {}> => {
@@ -41,8 +44,10 @@ export const getCacheOptions = async (
 
   return { tags: [`${cacheTag}`] }
 }
+
 export const setAuthToken = async (token: string) => {
-  return (await nextCookies()).set("_medusa_jwt", token, {
+  const cookies = await nextCookies()
+  cookies.set("_medusa_jwt", token, {
     maxAge: 60 * 60 * 24 * 7,
     httpOnly: true,
     sameSite: "strict",
@@ -51,17 +56,20 @@ export const setAuthToken = async (token: string) => {
 }
 
 export const removeAuthToken = async () => {
-  return (await nextCookies()).set("_medusa_jwt", "", {
+  const cookies = await nextCookies()
+  cookies.set("_medusa_jwt", "", {
     maxAge: -1,
   })
 }
 
 export const getCartId = async () => {
-  return (await nextCookies()).get("_medusa_cart_id")?.value
+  const cookies = await nextCookies()
+  return cookies.get("_medusa_cart_id")?.value
 }
 
 export const setCartId = async (cartId: string) => {
-  return (await nextCookies()).set("_medusa_cart_id", cartId, {
+  const cookies = await nextCookies()
+  cookies.set("_medusa_cart_id", cartId, {
     maxAge: 60 * 60 * 24 * 7,
     httpOnly: true,
     sameSite: "strict",
@@ -70,5 +78,8 @@ export const setCartId = async (cartId: string) => {
 }
 
 export const removeCartId = async () => {
-  return (await nextCookies()).set("_medusa_cart_id", "", { maxAge: -1 })
+  const cookies = await nextCookies()
+  cookies.set("_medusa_cart_id", "", {
+    maxAge: -1,
+  })
 }
