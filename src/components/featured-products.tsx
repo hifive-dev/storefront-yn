@@ -47,7 +47,7 @@ export function FeaturedProducts() {
           {products.map((product) => (
             <Link 
               key={product.id} 
-              href={product.href}
+              href="#"
               className="group"
             >
               <div className="relative aspect-[3/4] mb-4 overflow-hidden bg-gray-100">

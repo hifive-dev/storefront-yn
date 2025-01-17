@@ -7,22 +7,22 @@ const brands = [
   {
     name: "EDWIN",
     image: "/images/collection/edwin/edwin-header.jpg",
-    href: "/collections/edwin",
+    href: "/collections/flaneur",
   },
   {
-    name: "Arte Antwerp",
-    image: "/images/collection/arte-antwerp/arte-header.png",
-    href: "/collections/arte-antwerp",
+    name: "Flaneur",
+    image: "/images/collection/flaneur/flaneur-header.png",
+    href: "/collections/flaneur",
   },
   {
     name: "OLAF",
     image: "/images/collection/olaf/olaf-header.jpg",
-    href: "/collections/olaf-hussein",
+    href: "/collections/flaneur",
   },
   {
     name: "NN.07",
     image: "/images/collection/nn07/nn07-header.jpg",
-    href: "/collections/nn07",
+    href: "/collections/flaneur",
   },
 ]
 

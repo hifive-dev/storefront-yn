@@ -24,7 +24,6 @@ export default async function CategoryTemplate({
   const pageNumber = page ? parseInt(page) : 1
 
   const collections = await getCollectionsList(0, 100, ["id", "title", "handle"])
-  const types = await getProductTypesList(0, 100, ["id", "value"])
 
   return (
     <>
@@ -33,10 +32,7 @@ export default async function CategoryTemplate({
         collections={Object.fromEntries(
           collections.collections.map((c) => [c.handle, c.title])
         )}
-        types={Object.fromEntries(
-          types.productTypes.map((t) => [t.value, t.value])
-        )}
-        type={type}
+
       />
       <Suspense fallback={<SkeletonProductGrid />}>
         <PaginatedProducts
@@ -44,13 +40,8 @@ export default async function CategoryTemplate({
           page={pageNumber}
           countryCode={countryCode}
           categoryId={categoryData?.id}
-          typeId={
-            !type
-              ? undefined
-              : types.productTypes
-                .filter((t) => type.includes(t.value))
-                .map((t) => t.id)
-          }
+
+
         />
       </Suspense>
       <div className="pb-26 md:pb-36" />

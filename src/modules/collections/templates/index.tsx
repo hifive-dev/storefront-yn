@@ -13,7 +13,6 @@ export default async function CollectionTemplate({
   collection,
   collectionData,
   category,
-  type,
   page,
   countryCode,
 }: {
@@ -21,14 +20,12 @@ export default async function CollectionTemplate({
   collection: HttpTypes.StoreCollection
   collectionData?: Collection
   category: string[] | undefined
-  type?: string[]
   page?: string
   countryCode: string
 }) {
   const pageNumber = page ? parseInt(page) : 1
 
   const categories = await getCategoriesList(0, 100, ["id", "name", "handle"])
-  const types = await getProductTypesList(0, 100, ["id", "value"])
 
   return (
     <>
@@ -38,10 +35,6 @@ export default async function CollectionTemplate({
           categories.product_categories.map((c) => [c.handle, c.name])
         )}
         category={category}
-        types={Object.fromEntries(
-          types.productTypes.map((t) => [t.value, t.value])
-        )}
-        type={type}
       />
       <Suspense fallback={<SkeletonProductGrid />}>
         <PaginatedProducts
@@ -55,13 +48,6 @@ export default async function CollectionTemplate({
               : categories.product_categories
                 .filter((c) => category.includes(c.handle))
                 .map((c) => c.id)
-          }
-          typeId={
-            !type
-              ? undefined
-              : types.productTypes
-                .filter((t) => type.includes(t.value))
-                .map((t) => t.id)
           }
         />
       </Suspense>

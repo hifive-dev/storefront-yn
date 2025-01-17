@@ -313,14 +313,6 @@ const mockCollections: Collection[] = [
       "Step into simplicity with S.W.C. at Younithy. Clean designs crafted for understated elegance.",
   },
   {
-    collectionName: "Granucci",
-    description:
-      "Granucci: High-quality performance and casual wear rooted in active lifestyles. Available at Younithy in-store and online.",
-    collection_page_heading: "Granucci at Younithy",
-    collection_page_content:
-      "Find Granucci at Younithy – functional, stylish pieces for those on the move.",
-  },
-  {
     collectionName: "Le Bonnet",
     description:
       "Le Bonnet: Luxurious knitwear made with care and sustainability. Available at Younithy in-store and online.",
@@ -395,7 +387,7 @@ const heroSlides: SlideData[] = [
 ]
 export default async function CollectionPage({ params, searchParams }: Props) {
   const { handle, countryCode } = await params
-  const { sortBy, page, category, type } = await searchParams
+  const { sortBy, page, category } = await searchParams
 
   const collection = await getCollectionByHandle(handle, [
     "id",
@@ -409,7 +401,7 @@ export default async function CollectionPage({ params, searchParams }: Props) {
     notFound()
   }
   const headerSlide: SlideData = {
-    image: collectionData?.image?.url || "/images/default-collection-header.jpg",
+    image: `/images/collection/${collection.title}/${collection.title}-header.png`,
     title: collectionData?.collection_page_heading || collection.title,
     description: collectionData?.collection_page_content,
   }
@@ -426,7 +418,6 @@ export default async function CollectionPage({ params, searchParams }: Props) {
         category={
           !category ? undefined : Array.isArray(category) ? category : [category]
         }
-        type={!type ? undefined : Array.isArray(type) ? type : [type]}
       />
       </>
   )
