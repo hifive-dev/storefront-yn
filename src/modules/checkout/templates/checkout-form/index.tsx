@@ -19,15 +19,21 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ cart, customer, countryCode
   const [paymentMethods, setPaymentMethods] = React.useState<any[] | null>(null) // Replace `any` with the correct type for payment methods
   const [error, setError] = React.useState<string | null>(null)
 
+  console.log("Shipping Methods:", shippingMethods)
+  console.log("Payment Methods:", paymentMethods)
+  console.log("Cart:", cart)
+  console.log("Customer:", customer)
+  console.log("Country Code:", countryCode)
+  console.log("Error:", error)
   React.useEffect(() => {
     if (!cart) return
-
     const fetchData = async () => {
       try {
         const shippingOptions = await listCartShippingMethods(cart.id)
         const paymentOptions = await listCartPaymentMethods(cart.region?.id ?? "")
-
-        if (!shippingOptions || !paymentOptions) {
+        console.log("Shipping Methods 2:", shippingMethods)
+        console.log("Payment Methods 2:", paymentMethods)
+        if (!shippingOptions) {
           throw new Error("Failed to fetch shipping or payment methods.")
         }
 
@@ -38,7 +44,6 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ cart, customer, countryCode
         setError("Failed to load checkout options. Please try again.")
       }
     }
-
     fetchData()
   }, [cart])
 
@@ -50,19 +55,17 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ cart, customer, countryCode
     return <p className="text-red-500">{error}</p>
   }
 
-  if (!shippingMethods || !paymentMethods) {
+  if (!shippingMethods) {
     return <p>Loading checkout options...</p>
   }
 
-  console.log("Shipping Methods:", shippingMethods)
-  console.log("Payment Methods:", paymentMethods)
 
   return (
     <>
       <Email cart={cart} customer={customer} countryCode={countryCode} />
       <Addresses cart={cart} customer={customer} />
       <Shipping cart={cart} availableShippingMethods={shippingMethods} />
-      <Payment cart={cart} availablePaymentMethods={paymentMethods} />
+      {paymentMethods ? <Payment cart={cart} availablePaymentMethods={paymentMethods} /> : <>NOT</>}
       <Review cart={cart} />
     </>
   )
