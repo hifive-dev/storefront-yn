@@ -3,7 +3,7 @@
 import { Layout, LayoutColumn } from "@/components/Layout"
 import { NewsletterForm } from "@/components/NewsletterForm"
 import { LocalizedLink } from "@/components/LocalizedLink"
-import {Card, CardBody, CardFooter, Image} from "@nextui-org/react";
+import {Card, CardBody, CardFooter, Image} from "@heroui/react";
 import { InfiniteSlider } from "@/components/InfiniteSlider"
 import { InstagramCarousel } from "@/components/instagram-carousel"
 

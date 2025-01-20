@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import * as TabsPrimitive from "@radix-ui/react-tabs"
-import { cn } from "@nextui-org/theme"
+import { cn } from "@heroui/theme"
 
 
 const Tabs = TabsPrimitive.Root

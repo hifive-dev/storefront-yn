@@ -11,7 +11,6 @@ import medusaError from "@lib/util/medusa-error"
 import { enrichLineItems } from "@lib/util/enrich-line-items"
 import {
   getAuthHeaders,
-  getCacheTag,
   getCartId,
   removeCartId,
   setCartId,
