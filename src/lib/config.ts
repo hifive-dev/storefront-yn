@@ -1,7 +1,7 @@
 import Medusa from "@medusajs/js-sdk"
 
 // Defaults to standard port for Medusa server
-let MEDUSA_BACKEND_URL = "https://medcu511ko5iop67dpvqn7g.nomodo.app"
+let MEDUSA_BACKEND_URL = "https://admin.younithy.com"
 
 if (process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL) {
   MEDUSA_BACKEND_URL = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL

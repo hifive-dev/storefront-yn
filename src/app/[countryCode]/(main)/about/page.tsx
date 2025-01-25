@@ -9,8 +9,15 @@ import { listRegions } from "@lib/data/regions"
 import { Layout, LayoutColumn } from "@/components/Layout"
 
 export async function generateStaticParams() {
-  const countryCodes = await listRegions().then((regions: StoreRegion[]) =>
-    regions.flatMap((r) =>
+  try {
+    const regions = await listRegions()
+    
+    if (!regions || !Array.isArray(regions)) {
+      console.warn('No regions data available, falling back to default')
+      return [{ countryCode: 'eu' }] // Fallback to US as default
+    }
+
+    const countryCodes = regions.flatMap((r: StoreRegion) =>
       r.countries
         ? r.countries
             .map((c) => c.iso_2)
@@ -20,13 +27,19 @@ export async function generateStaticParams() {
             )
         : []
     )
-  )
 
-  const staticParams = countryCodes.map((countryCode) => ({
-    countryCode,
-  }))
+    if (countryCodes.length === 0) {
+      console.warn('No country codes found, falling back to default')
+      return [{ countryCode: 'us' }]
+    }
 
-  return staticParams
+    return countryCodes.map((countryCode) => ({
+      countryCode,
+    }))
+  } catch (error) {
+    console.error('Error generating static params:', error)
+    return [{ countryCode: 'us' }] // Fallback to US as default
+  }
 }
 
 export default function AboutPage() {
