@@ -80,8 +80,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ProductPage({ params }: Props) {
   const { handle, countryCode } = await params
   const region = await getRegion(countryCode)
-  console.log(params)
-  console.log(region)
   if (!region) {
     notFound()
   }

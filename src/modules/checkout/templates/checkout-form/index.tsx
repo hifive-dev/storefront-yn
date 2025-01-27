@@ -19,20 +19,12 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ cart, customer, countryCode
   const [paymentMethods, setPaymentMethods] = React.useState<any[] | null>(null) // Replace `any` with the correct type for payment methods
   const [error, setError] = React.useState<string | null>(null)
 
-  console.log("Shipping Methods:", shippingMethods)
-  console.log("Payment Methods:", paymentMethods)
-  console.log("Cart:", cart)
-  console.log("Customer:", customer)
-  console.log("Country Code:", countryCode)
-  console.log("Error:", error)
   React.useEffect(() => {
     if (!cart) return
     const fetchData = async () => {
       try {
         const shippingOptions = await listCartShippingMethods(cart.id)
         const paymentOptions = await listCartPaymentMethods(cart.region?.id ?? "")
-        console.log("Shipping Methods 2:", shippingMethods)
-        console.log("Payment Methods 2:", paymentMethods)
         if (!shippingOptions) {
           throw new Error("Failed to fetch shipping or payment methods.")
         }

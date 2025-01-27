@@ -22,7 +22,6 @@ export const Navigation: React.FC<NavigationProps> = ({ isScrolled, categories }
   }, [hoveredCategory]);
 
   const generateMenuItems = (categories: any[]) => {
-    console.log(categories)
     return categories.map((category) => {
       if (!category.parent_category && category.category_children.length > 0) {
         // @ts-ignore

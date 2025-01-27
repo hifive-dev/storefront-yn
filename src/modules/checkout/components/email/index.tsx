@@ -27,11 +27,6 @@ const Email = ({
   const isOpen = searchParams.get("step") === "email"
 
   const [state, formAction] = useActionState(setEmail, null)
-  console.log("Search Params:", searchParams)
-  console.log("Router:", router)
-  console.log("Pathname:", pathname)
-  console.log("Is Open:", isOpen)
-  console.log("State:", state)
   return (
     <>
       <div className="flex justify-between mb-8">

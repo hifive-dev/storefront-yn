@@ -62,7 +62,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     "title",
     "metadata",
   ])
-  console.log(collection)
   if (!collection) {
     notFound()
   }
