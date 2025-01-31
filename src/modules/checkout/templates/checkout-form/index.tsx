@@ -53,13 +53,13 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ cart, customer, countryCode
 
 
   return (
-    <>
+    <div className="flex flex-col gap-4">
       <Email cart={cart} customer={customer} countryCode={countryCode} />
       <Addresses cart={cart} customer={customer} />
-      <Shipping cart={cart} availableShippingMethods={shippingMethods} />
+      {shippingMethods ? <Shipping cart={cart} availableShippingMethods={shippingMethods} /> : <>NOT</>}
       {paymentMethods ? <Payment cart={cart} availablePaymentMethods={paymentMethods} /> : <>NOT</>}
       <Review cart={cart} />
-    </>
+    </div>
   )
 }
 

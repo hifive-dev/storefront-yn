@@ -38,22 +38,20 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
 
   const paymentSession = cart.payment_collection?.payment_sessions?.[0]
 
-  switch (true) {
-    case isStripe(paymentSession?.provider_id):
-      return <StripePaymentButton notReady={notReady} cart={cart} />
+  if (paymentSession?.provider_id) {
+    return <StripeIdealPaymentButton notReady={notReady} cart={cart} />
+  }
 
-    default:
-      return (
+  return (
         <Button
           className="w-full"
-          onPress={() => {
+          onClick={() => {
             selectPaymentMethod()
           }}
         >
-          Select a payment method
-        </Button>
-      )
-  }
+      Select a payment method
+    </Button>
+  )
 }
 
 const GiftCardPaymentButton = () => {
@@ -81,6 +79,108 @@ const StripePaymentButton = ({
   const [submitting, setSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
+  const onPaymentCompleted = async () => {
+    await placeOrder()
+      .catch((err) => {
+        setErrorMessage(err.message)
+      })
+      .finally(() => {
+        setSubmitting(false)
+      })
+  }
+
+  const stripe = useStripe()
+  const elements = useElements()
+  const card = elements?.getElement("card")
+
+  const session = cart.payment_collection?.payment_sessions?.find(
+    (s) => s.status === "pending"
+  )
+
+  const disabled = !stripe || !elements ? true : false
+
+  const handlePayment = async () => {
+    setSubmitting(true)
+
+    if (!stripe || !elements || !card || !cart) {
+      setSubmitting(false)
+      return
+    }
+
+    await stripe
+      .confirmCardPayment(session?.data.client_secret as string, {
+        payment_method: {
+          card: card,
+          billing_details: {
+            name:
+              cart.billing_address?.first_name +
+              " " +
+              cart.billing_address?.last_name,
+            address: {
+              city: cart.billing_address?.city ?? undefined,
+              country: cart.billing_address?.country_code ?? undefined,
+              line1: cart.billing_address?.address_1 ?? undefined,
+              line2: cart.billing_address?.address_2 ?? undefined,
+              postal_code: cart.billing_address?.postal_code ?? undefined,
+              state: cart.billing_address?.province ?? undefined,
+            },
+            email: cart.email,
+            phone: cart.billing_address?.phone ?? undefined,
+          },
+        },
+      })
+      .then(({ error, paymentIntent }) => {
+        if (error) {
+          const pi = error.payment_intent
+
+          if (
+            (pi && pi.status === "requires_capture") ||
+            (pi && pi.status === "succeeded")
+          ) {
+            onPaymentCompleted()
+          }
+
+          setErrorMessage(error.message || null)
+          return
+        }
+
+        if (
+          (paymentIntent && paymentIntent.status === "requires_capture") ||
+          paymentIntent.status === "succeeded"
+        ) {
+          return onPaymentCompleted()
+        }
+
+        return
+      })
+  }
+
+  return (
+    <>
+      <Button
+        disabled={disabled || notReady}
+        onPress={handlePayment}
+        isLoading={submitting}
+        className="w-full"
+      >
+        Place order
+      </Button>
+      <ErrorMessage error={errorMessage} />
+    </>
+  )
+}
+
+const StripeIdealPaymentButton = ({
+                               cart,
+                               notReady,
+                             }: {
+  cart: HttpTypes.StoreCart
+  notReady: boolean
+}) => {
+  const [submitting, setSubmitting] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+ 
   const onPaymentCompleted = async () => {
     await placeOrder()
       .catch((err) => {

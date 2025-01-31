@@ -3,8 +3,12 @@ import { notFound } from "next/navigation"
 import { NextRequest, NextResponse } from "next/server"
 
 const BACKEND_URL = process.env.MEDUSA_BACKEND_URL
-const PUBLISHABLE_API_KEY = "pk_42737a3d61cc64e8a78d85a43aa98e7a00c3975069e649a3446a73f58c118cfc"
+const PUBLISHABLE_API_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
 const DEFAULT_REGION = process.env.NEXT_PUBLIC_DEFAULT_REGION || "eu"
+
+console.log(process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY)
+console.log(process.env.MEDUSA_BACKEND_URL)
+console.log(process.env.NEXT_PUBLIC_DEFAULT_REGION)
 
 const regionMapCache = {
   regionMap: new Map<string, HttpTypes.StoreRegion>(),

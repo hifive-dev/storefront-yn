@@ -4,7 +4,6 @@ import { loadStripe } from "@stripe/stripe-js"
 import React from "react"
 import StripeWrapper from "./stripe-wrapper"
 import { PayPalScriptProvider } from "@paypal/react-paypal-js"
-import { createContext } from "react"
 import { HttpTypes } from "@medusajs/types"
 import { isStripe } from "@lib/constants"
 
@@ -12,8 +11,6 @@ type WrapperProps = {
   cart: HttpTypes.StoreCart
   children: React.ReactNode
 }
-
-export const StripeContext = createContext(false)
 
 const stripeKey = process.env.NEXT_PUBLIC_STRIPE_KEY
 const stripeAccountId = process.env.NEXT_PUBLIC_STRIPE_ACCOUNT_ID
@@ -27,21 +24,15 @@ const Wrapper: React.FC<WrapperProps> = ({ cart, children }) => {
     (s) => s.status === "pending"
   )
 
-  if (
-    isStripe(paymentSession?.provider_id) &&
-    paymentSession &&
-    stripePromise
-  ) {
+  if (isStripe(paymentSession?.provider_id) && paymentSession && stripePromise) {
     return (
-      <StripeContext.Provider value={true}>
-        <StripeWrapper
-          paymentSession={paymentSession}
-          stripeKey={stripeKey}
-          stripePromise={stripePromise}
-        >
-          {children}
-        </StripeWrapper>
-      </StripeContext.Provider>
+      <StripeWrapper
+        paymentSession={paymentSession}
+        stripeKey={stripeKey}
+        stripePromise={stripePromise}
+      >
+        {children}
+      </StripeWrapper>
     )
   }
 

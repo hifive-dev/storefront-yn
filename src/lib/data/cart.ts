@@ -137,6 +137,7 @@ const addressesFormSchema = z
   )
 
 export async function setAddresses(currentState: unknown, formData: FormData) {
+  
   try {
     if (!formData) {
       throw new Error("No form data found when setting addresses")
@@ -377,7 +378,7 @@ export async function initiatePaymentSession(providerId: string) {
 
   const cart = await retrieveCart()
   if (!cart) throw new Error("Can't initiate payment without cart")
-
+    
   try {
     const resp = await sdk.store.payment.initiatePaymentSession(
       cart,

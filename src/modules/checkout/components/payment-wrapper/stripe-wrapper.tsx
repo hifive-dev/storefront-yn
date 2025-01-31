@@ -1,24 +1,26 @@
 "use client"
-import { FC, ReactNode }  from "react"
+
 import { Stripe, StripeElementsOptions } from "@stripe/stripe-js"
 import { Elements } from "@stripe/react-stripe-js"
 import { HttpTypes } from "@medusajs/types"
+import { createContext } from "react"
 
 type StripeWrapperProps = {
   paymentSession: HttpTypes.StorePaymentSession
   stripeKey?: string
   stripePromise: Promise<Stripe | null> | null
-  children: ReactNode
+  children: React.ReactNode
 }
 
-const StripeWrapper: FC<StripeWrapperProps> = ({
+export const StripeContext = createContext(false)
+
+const StripeWrapper: React.FC<StripeWrapperProps> = ({
   paymentSession,
   stripeKey,
   stripePromise,
   children,
 }) => {
   const options: StripeElementsOptions = {
-
     clientSecret: paymentSession!.data?.client_secret as string | undefined,
   }
 
@@ -42,7 +44,9 @@ const StripeWrapper: FC<StripeWrapperProps> = ({
 
   return (
     <Elements options={options} stripe={stripePromise}>
-      {children}
+      <StripeContext.Provider value={true}>
+        {children}
+      </StripeContext.Provider>
     </Elements>
   )
 }
